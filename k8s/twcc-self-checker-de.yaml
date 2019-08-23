@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: twcc-util
+  name: self-checker
+  labels:
+    app: self-checker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: self-checker
+  template:
+    metadata:
+      labels:
+        app: self-checker
+    spec:
+      serviceAccountName: self-checker
+      containers:
+        - name: self-checker
+          image: ogre0403/twcc-self-checker:v0.1
+          imagePullPolicy: Always
+          command:
+            - /twcc-self-checker
+            - --v=1
+          ports:
+            - containerPort: 8080
+              name: http
+          resources:
+            limits:
+              cpu: 500m
+              memory: 500Mi
+            requests:
+              cpu: 500m
+              memory: 500Mi
