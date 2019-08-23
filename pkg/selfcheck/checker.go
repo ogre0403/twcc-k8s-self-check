@@ -6,17 +6,13 @@ import (
 	"gitlab.com/twcc/twcc-k8s-self-check/pkg/model"
 	"gitlab.com/twcc/twcc-k8s-self-check/pkg/tester"
 	"net/http"
-)
-
-const (
-	PASS = "PASS"
-	FAIL = "FAIL"
+	"sync/atomic"
 )
 
 type SelfChecker struct {
 	testcases []tester.Tester
-	lock      bool
 	cfg       *config.Config
+	locker    uint32
 }
 
 func NewSelfChecker(cfg *config.Config) *SelfChecker {
@@ -32,31 +28,27 @@ func NewSelfChecker(cfg *config.Config) *SelfChecker {
 
 	return &SelfChecker{
 		testcases: cases,
-		lock:      false,
 		cfg:       cfg,
 	}
 }
 
 func (s *SelfChecker) Check(c *gin.Context) {
 
-	result := model.CheckResult{}
-
-	if s.lock {
-		result.ErrorMsg = "Another Self Check is running"
-		c.JSON(http.StatusTooManyRequests, result)
+	if !atomic.CompareAndSwapUint32(&s.locker, 0, 1) {
+		c.JSON(http.StatusTooManyRequests, model.CheckResult{
+			ErrorMsg: "Another Self Check is running",
+		})
 		return
 	}
+	defer atomic.StoreUint32(&s.locker, 0)
 
-	s.lock = true
-
+	result := model.CheckResult{}
 	for _, t := range s.testcases {
 		if !t.Run().Report(&result).Next() {
-			s.lock = false
 			c.JSON(http.StatusOK, result)
 			return
 		}
 	}
 
 	c.JSON(http.StatusOK, result)
-	s.lock = false
 }
