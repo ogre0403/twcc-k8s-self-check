@@ -1,6 +1,8 @@
 package tester
 
 import (
+	"errors"
+	"github.com/cenkalti/backoff"
 	log "github.com/golang/glog"
 	"gitlab.com/twcc/twcc-k8s-self-check/pkg/config"
 	"gitlab.com/twcc/twcc-k8s-self-check/pkg/model"
@@ -8,6 +10,7 @@ import (
 	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	v1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	"time"
 )
 
 type NamespaceTester struct {
@@ -41,6 +44,10 @@ func (t *NamespaceTester) Run() Tester {
 
 	if err != nil {
 		log.V(1).Infof("Create namespace %s fail: %s", t.cfg.Namespace, err.Error())
+		t.pass = false
+		t.err = err
+	} else {
+		t.pass = true
 	}
 
 	return t
@@ -48,8 +55,28 @@ func (t *NamespaceTester) Run() Tester {
 
 func (t *NamespaceTester) Check() Tester {
 
-	_, err := t.nsClient.Get(t.cfg.Namespace, v12.GetOptions{})
+	if t.pass == false {
+		return t
+	}
+	b := backoff.NewExponentialBackOff()
+	b.MaxElapsedTime = time.Duration(t.cfg.Timout) * time.Second
+
+	checkNamespaceIp := func() error {
+		ns, err := t.nsClient.Get(t.cfg.Namespace, v12.GetOptions{})
+		if err != nil {
+			return err
+		}
+		ip, exist := ns.Annotations["inwinstack.com/allocated-ips"]
+		if !exist {
+			return errors.New("ips might be exhausted, no ip is assigned")
+		}
+		log.V(1).Infof("namespace %s get ip %s", t.cfg.Namespace, ip)
+		return nil
+	}
+
+	err := backoff.Retry(checkNamespaceIp, b)
 	if err != nil {
+		log.V(1).Infof("namespace %s is not assigned ip after timeout: %s", t.cfg.Namespace, err.Error())
 		t.pass = false
 		t.err = err
 	} else {

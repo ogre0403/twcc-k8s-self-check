@@ -1,10 +1,10 @@
 package k8sutil
 
 import (
+	log "github.com/golang/glog"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	log "github.com/golang/glog"
 )
 
 func getRestConfig(kubeconfig string) (*rest.Config, error) {

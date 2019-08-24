@@ -32,7 +32,9 @@ func parserFlags() {
 	cfg.Namespace = *flag.String("namespace", WOODPECKER, "namespace name used for test")
 	cfg.Pod = *flag.String("pod", WOODPECKER, "pod name used for test")
 	cfg.Svc = *flag.String("svc", WOODPECKER, "service name used for test")
-	cfg.Image = *flag.String("image", "registry.twcc.ai/ngc/nvidia/tensorflow-18.12-py3-v1:latest", "container image used for test")
+	cfg.Image = *flag.String("image", "nginx:latest", "container image used for test")
+	cfg.Port = *flag.Int("port", 80, "container port used for test")
+	cfg.Timout = *flag.Int("timeout", 30, "timeout for check test result")
 	flag.Parse()
 }
 

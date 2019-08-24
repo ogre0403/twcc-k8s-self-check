@@ -1,6 +1,7 @@
 module gitlab.com/twcc/twcc-k8s-self-check
 
 require (
+	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/evanphx/json-patch v4.2.0+incompatible // indirect
 	github.com/gin-gonic/gin v1.4.0
 	github.com/gogo/protobuf v1.2.2-0.20190723190241-65acae22fc9d // indirect

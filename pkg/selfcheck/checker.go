@@ -1,7 +1,6 @@
 package selfcheck
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"gitlab.com/twcc/twcc-k8s-self-check/pkg/config"
 	"gitlab.com/twcc/twcc-k8s-self-check/pkg/model"
@@ -9,6 +8,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"net/http"
 	"sync/atomic"
+	log "github.com/golang/glog"
+
 )
 
 type SelfChecker struct {
@@ -21,7 +22,7 @@ func NewSelfChecker(cfg *config.Config, kclient *kubernetes.Clientset) *SelfChec
 
 	cases := []tester.Tester{
 		tester.NewNamespaceTester(cfg, kclient),
-		tester.NewPodTester(cfg),
+		tester.NewPodTester(cfg, kclient),
 		tester.NewSvcTester(cfg),
 		tester.NewIntraConnTester(cfg),
 		tester.NewInterConnTester(cfg),
@@ -57,7 +58,7 @@ func (s *SelfChecker) Check(c *gin.Context) {
 }
 
 func (s *SelfChecker) shutdown() {
-	fmt.Println("shutdown")
+	log.V(1).Info("Teardown all created resource in this test")
 	for _, t := range s.testcases {
 		t.Close()
 	}

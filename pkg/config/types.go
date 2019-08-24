@@ -5,4 +5,6 @@ type Config struct {
 	Pod       string
 	Svc       string
 	Image     string
+	Port      int
+	Timout    int
 }
