@@ -24,7 +24,7 @@ func (t *PodTester) Run() Tester {
 }
 
 func (t *PodTester) Check() Tester {
-	t.pass = true
+	t.pass = false
 
 	return t
 }

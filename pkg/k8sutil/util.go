@@ -2,29 +2,40 @@ package k8sutil
 
 import (
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	"os"
-	"path/filepath"
+	log "github.com/golang/glog"
 )
 
-func NewK8sClient(runOutsideCluster bool) (*kubernetes.Clientset, error) {
-	kubeConfigLocation := ""
-
-	if runOutsideCluster == true {
-		if os.Getenv("KUBECONFIG") != "" {
-			kubeConfigLocation = filepath.Join(os.Getenv("KUBECONFIG"))
-		} else {
-			homeDir := os.Getenv("HOME")
-			kubeConfigLocation = filepath.Join(homeDir, ".kube", "config")
+func getRestConfig(kubeconfig string) (*rest.Config, error) {
+	if kubeconfig != "" {
+		cfg, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+		if err != nil {
+			return nil, err
 		}
+		return cfg, nil
 	}
 
-	// use the current context in kubeconfig
-	config, err := clientcmd.BuildConfigFromFlags("", kubeConfigLocation)
-
+	cfg, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, err
 	}
+	return cfg, nil
+}
 
-	return kubernetes.NewForConfig(config)
+func GetK8SClientSet(kubeconfig string) *kubernetes.Clientset {
+
+	config, err := getRestConfig(kubeconfig)
+	if err != nil {
+		log.Fatalf("create kubenetes config fail: %s", err.Error())
+		return nil
+	}
+
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		log.Fatalf("create kubenetes client set fail: %s", err.Error())
+		return nil
+	}
+
+	return clientset
 }

@@ -24,7 +24,7 @@ func (t *SvcTester) Run() Tester {
 }
 
 func (t *SvcTester) Check() Tester {
-	t.pass = true
+	t.pass = false
 	return t
 }
 

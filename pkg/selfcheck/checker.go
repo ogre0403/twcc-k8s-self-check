@@ -6,6 +6,7 @@ import (
 	"gitlab.com/twcc/twcc-k8s-self-check/pkg/config"
 	"gitlab.com/twcc/twcc-k8s-self-check/pkg/model"
 	"gitlab.com/twcc/twcc-k8s-self-check/pkg/tester"
+	"k8s.io/client-go/kubernetes"
 	"net/http"
 	"sync/atomic"
 )
@@ -16,10 +17,10 @@ type SelfChecker struct {
 	locker    uint32
 }
 
-func NewSelfChecker(cfg *config.Config) *SelfChecker {
+func NewSelfChecker(cfg *config.Config, kclient *kubernetes.Clientset) *SelfChecker {
 
 	cases := []tester.Tester{
-		tester.NewNamespaceTester(cfg),
+		tester.NewNamespaceTester(cfg, kclient),
 		tester.NewPodTester(cfg),
 		tester.NewSvcTester(cfg),
 		tester.NewIntraConnTester(cfg),

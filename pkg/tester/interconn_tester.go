@@ -24,7 +24,7 @@ func (t *InterConnTester) Run() Tester {
 }
 
 func (t *InterConnTester) Check() Tester {
-	t.pass = true
+	t.pass = false
 	return t
 }
 

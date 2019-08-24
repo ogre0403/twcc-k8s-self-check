@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	log "github.com/golang/glog"
 	"gitlab.com/twcc/twcc-k8s-self-check/pkg/config"
+	"gitlab.com/twcc/twcc-k8s-self-check/pkg/k8sutil"
 	"gitlab.com/twcc/twcc-k8s-self-check/pkg/selfcheck"
 	"os"
 )
@@ -45,7 +46,14 @@ func main() {
 	parserFlags()
 	showVersion()
 
-	checker := selfcheck.NewSelfChecker(cfg)
+	kclient := k8sutil.GetK8SClientSet(kubeconfig)
+
+	if kclient == nil {
+		log.Fatal("Create kubernetes clientset fail")
+		return
+	}
+
+	checker := selfcheck.NewSelfChecker(cfg, kclient)
 
 	router := gin.Default()
 
