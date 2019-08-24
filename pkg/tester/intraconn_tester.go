@@ -24,16 +24,18 @@ func (t *IntraConnTester) Run() Tester {
 }
 
 func (t *IntraConnTester) Check() Tester {
+	t.pass = true
+
 	return t
 }
 
-func (t *IntraConnTester) Report(report *model.CheckResult) Tester {
+func (t *IntraConnTester) Report(report interface{}) Tester {
 
 	if !t.pass {
-		report.IntranetConnection = FAIL
-		report.ErrorMsg = t.err.Error()
+		report.(*model.CheckResult).IntranetConnection = FAIL
+		report.(*model.CheckResult).ErrorMsg = t.err.Error()
 	} else {
-		report.IntranetConnection = PASS
+		report.(*model.CheckResult).IntranetConnection = PASS
 	}
 	return t
 }

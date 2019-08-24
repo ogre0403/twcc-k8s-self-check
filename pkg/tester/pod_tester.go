@@ -24,16 +24,18 @@ func (t *PodTester) Run() Tester {
 }
 
 func (t *PodTester) Check() Tester {
+	t.pass = true
+
 	return t
 }
 
-func (t *PodTester) Report(report *model.CheckResult) Tester {
+func (t *PodTester) Report(report interface{}) Tester {
 
 	if !t.pass {
-		report.PodCreate = FAIL
-		report.ErrorMsg = t.err.Error()
+		report.(*model.CheckResult).PodCreate = FAIL
+		report.(*model.CheckResult).ErrorMsg = t.err.Error()
 	} else {
-		report.PodCreate = PASS
+		report.(*model.CheckResult).PodCreate = PASS
 	}
 	return t
 }

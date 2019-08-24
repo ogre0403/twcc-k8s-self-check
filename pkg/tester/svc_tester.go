@@ -24,16 +24,17 @@ func (t *SvcTester) Run() Tester {
 }
 
 func (t *SvcTester) Check() Tester {
+	t.pass = true
 	return t
 }
 
-func (t *SvcTester) Report(report *model.CheckResult) Tester {
+func (t *SvcTester) Report(report interface{}) Tester {
 
 	if !t.pass {
-		report.SvcCreate = FAIL
-		report.ErrorMsg = t.err.Error()
+		report.(*model.CheckResult).SvcCreate = FAIL
+		report.(*model.CheckResult).ErrorMsg = t.err.Error()
 	} else {
-		report.SvcCreate = PASS
+		report.(*model.CheckResult).SvcCreate = PASS
 	}
 	return t
 }

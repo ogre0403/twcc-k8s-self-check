@@ -1,9 +1,5 @@
 package tester
 
-import (
-	"gitlab.com/twcc/twcc-k8s-self-check/pkg/model"
-)
-
 const (
 	PASS = "PASS"
 	FAIL = "FAIL"
@@ -17,7 +13,7 @@ type Tester interface {
 	Check() Tester
 
 	// fill report
-	Report(*model.CheckResult) Tester
+	Report(interface{}) Tester
 
 	// if need to run next step
 	Next() bool

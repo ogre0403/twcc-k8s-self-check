@@ -27,18 +27,17 @@ func (t *NamespaceTester) Run() Tester {
 }
 
 func (t *NamespaceTester) Check() Tester {
-	//t.pass = false
-	//t.err = errors.New("not implemented")
+	t.pass = true
 	return t
 }
 
-func (t *NamespaceTester) Report(report *model.CheckResult) Tester {
+func (t *NamespaceTester) Report(report interface{}) Tester {
 
 	if !t.pass {
-		report.NamespaceCreate = FAIL
-		report.ErrorMsg = t.err.Error()
+		report.(*model.CheckResult).NamespaceCreate = FAIL
+		report.(*model.CheckResult).ErrorMsg = t.err.Error()
 	} else {
-		report.NamespaceCreate = PASS
+		report.(*model.CheckResult).NamespaceCreate = PASS
 	}
 	return t
 }
