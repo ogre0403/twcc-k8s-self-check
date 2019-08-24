@@ -55,6 +55,9 @@ func main() {
 
 	authorized.GET("/selfcheck", checker.Check)
 
-	router.Run(listenAddr)
+	err := router.Run(listenAddr)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 
 }

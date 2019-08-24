@@ -1,6 +1,7 @@
 package selfcheck
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"gitlab.com/twcc/twcc-k8s-self-check/pkg/config"
 	"gitlab.com/twcc/twcc-k8s-self-check/pkg/model"
@@ -18,12 +19,11 @@ type SelfChecker struct {
 func NewSelfChecker(cfg *config.Config) *SelfChecker {
 
 	cases := []tester.Tester{
-		&tester.NamespaceTester{},
-		&tester.PodTester{},
-		&tester.SvcTester{},
-		&tester.IntraConnTester{},
-		&tester.InterConnTester{},
-		&tester.TeardownTester{},
+		tester.NewNamespaceTester(cfg),
+		tester.NewPodTester(cfg),
+		tester.NewSvcTester(cfg),
+		tester.NewIntraConnTester(cfg),
+		tester.NewInterConnTester(cfg),
 	}
 
 	return &SelfChecker{
@@ -40,15 +40,24 @@ func (s *SelfChecker) Check(c *gin.Context) {
 		})
 		return
 	}
+	// deferred calls are executed in last-in-first-out
 	defer atomic.StoreUint32(&s.locker, 0)
+	defer s.shutdown()
 
 	result := model.CheckResult{}
 	for _, t := range s.testcases {
-		if !t.Run().Report(&result).Next() {
+		if !t.Run().Check().Report(&result).Next() {
 			c.JSON(http.StatusOK, result)
 			return
 		}
 	}
 
 	c.JSON(http.StatusOK, result)
+}
+
+func (s *SelfChecker) shutdown() {
+	fmt.Println("shutdown")
+	for _, t := range s.testcases {
+		t.Close()
+	}
 }
