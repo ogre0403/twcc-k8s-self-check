@@ -18,15 +18,17 @@ type NamespaceTester struct {
 	cfg      *config.Config
 	pass     bool
 	err      error
+	ctx      map[string]string
 }
 
-func NewNamespaceTester(cfg *config.Config, kclient *kubernetes.Clientset) *NamespaceTester {
+func NewNamespaceTester(cfg *config.Config, kclient *kubernetes.Clientset, ctx map[string]string) *NamespaceTester {
 
 	nsClient := kclient.CoreV1().Namespaces()
 
 	return &NamespaceTester{
 		cfg:      cfg,
 		nsClient: nsClient,
+		ctx:      ctx,
 		pass:     false,
 		err:      nil,
 	}
@@ -71,6 +73,7 @@ func (t *NamespaceTester) Check() Tester {
 			return errors.New("ips might be exhausted, no ip is assigned")
 		}
 		log.V(1).Infof("namespace %s get ip %s", t.cfg.Namespace, ip)
+		t.ctx["externalip"] = ip
 		return nil
 	}
 

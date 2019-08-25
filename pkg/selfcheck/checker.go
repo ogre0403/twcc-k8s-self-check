@@ -2,35 +2,35 @@ package selfcheck
 
 import (
 	"github.com/gin-gonic/gin"
+	log "github.com/golang/glog"
 	"gitlab.com/twcc/twcc-k8s-self-check/pkg/config"
 	"gitlab.com/twcc/twcc-k8s-self-check/pkg/model"
 	"gitlab.com/twcc/twcc-k8s-self-check/pkg/tester"
 	"k8s.io/client-go/kubernetes"
 	"net/http"
 	"sync/atomic"
-	log "github.com/golang/glog"
-
 )
 
 type SelfChecker struct {
 	testcases []tester.Tester
-	cfg       *config.Config
+	//cfg       *config.Config
 	locker    uint32
 }
 
 func NewSelfChecker(cfg *config.Config, kclient *kubernetes.Clientset) *SelfChecker {
 
+	ctx := make(map[string]string)
 	cases := []tester.Tester{
-		tester.NewNamespaceTester(cfg, kclient),
-		tester.NewPodTester(cfg, kclient),
-		tester.NewSvcTester(cfg),
+		tester.NewNamespaceTester(cfg, kclient, ctx),
+		tester.NewPodTester(cfg, kclient, ctx),
+		tester.NewSvcTester(cfg, kclient, ctx),
 		tester.NewIntraConnTester(cfg),
 		tester.NewInterConnTester(cfg),
 	}
 
 	return &SelfChecker{
 		testcases: cases,
-		cfg:       cfg,
+		//cfg:       cfg,
 	}
 }
 

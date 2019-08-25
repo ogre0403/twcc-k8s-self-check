@@ -33,7 +33,8 @@ func parserFlags() {
 	cfg.Pod = *flag.String("pod", WOODPECKER, "pod name used for test")
 	cfg.Svc = *flag.String("svc", WOODPECKER, "service name used for test")
 	cfg.Image = *flag.String("image", "nginx:latest", "container image used for test")
-	cfg.Port = *flag.Int("port", 80, "container port used for test")
+	cfg.Port = *flag.Int("port", 80, "container application port used for test")
+	cfg.ExternalPort = *flag.Int("externalPort", 12345, "access port for external IP used for test")
 	cfg.Timout = *flag.Int("timeout", 30, "timeout for check test result")
 	flag.Parse()
 }

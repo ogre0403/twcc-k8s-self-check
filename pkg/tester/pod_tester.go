@@ -18,14 +18,16 @@ type PodTester struct {
 	cfg       *config.Config
 	pass      bool
 	err       error
+	ctx       map[string]string
 }
 
-func NewPodTester(cfg *config.Config, kclient *kubernetes.Clientset) *PodTester {
+func NewPodTester(cfg *config.Config, kclient *kubernetes.Clientset, ctx map[string]string) *PodTester {
 
 	podClient := kclient.CoreV1().Pods(cfg.Namespace)
 
 	return &PodTester{
 		podClient: podClient,
+		ctx:       ctx,
 		cfg:       cfg,
 		pass:      false,
 		err:       nil,
