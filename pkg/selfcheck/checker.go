@@ -25,7 +25,7 @@ func NewSelfChecker(cfg *config.Config, kclient *kubernetes.Clientset, crdClient
 		tester.NewPodTester(cfg, kclient, ctx),
 		tester.NewSvcTester(cfg, kclient, crdClient, ctx),
 		tester.NewIntraConnTester(cfg, ctx),
-		tester.NewInterConnTester(cfg),
+		tester.NewInterConnTester(cfg, ctx),
 	}
 
 	return &SelfChecker{

@@ -16,7 +16,7 @@ endif
 
 run:
 	rm -rf bin/${PROJ_NAME}
-	go build -ldflags '-X "main.buildTime='"${buildTime}"'" -X "main.commitID='"${COMMIT}"'"'  -o bin/${PROJ_NAME} cmd/main.go
+	go build  -mod vendor -ldflags '-X "main.buildTime='"${buildTime}"'" -X "main.commitID='"${COMMIT}"'"'  -o bin/${PROJ_NAME} cmd/main.go
 	./bin/${PROJ_NAME}  -v=1
 
 

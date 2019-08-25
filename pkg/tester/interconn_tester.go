@@ -2,19 +2,26 @@ package tester
 
 import (
 	"errors"
+	"github.com/cenkalti/backoff"
+	log "github.com/golang/glog"
 	"gitlab.com/twcc/twcc-k8s-self-check/pkg/config"
 	"gitlab.com/twcc/twcc-k8s-self-check/pkg/model"
+	"time"
 )
 
 type InterConnTester struct {
+	cfg  *config.Config
+	ctx  map[string]string
 	pass bool
 	err  error
 }
 
-func NewInterConnTester(cfg *config.Config) *InterConnTester {
+func NewInterConnTester(cfg *config.Config, ctx map[string]string) *InterConnTester {
 	return &InterConnTester{
+		cfg:  cfg,
+		ctx:  ctx,
 		pass: false,
-		err:  errors.New("not implemented"),
+		err:  nil,
 	}
 }
 
@@ -24,7 +31,33 @@ func (t *InterConnTester) Run() Tester {
 }
 
 func (t *InterConnTester) Check() Tester {
-	t.pass = false
+	if t.pass == false {
+		return t
+	}
+
+	b := backoff.NewExponentialBackOff()
+	b.MaxElapsedTime = time.Duration(t.cfg.Timout) * time.Second
+
+	checkInterConnection := func() error {
+		return nil
+	}
+
+	publicip, exist := t.ctx["publicip"]
+	if !exist {
+		t.pass = false
+		t.err = errors.New("can not find public ip in context")
+		return t
+	}
+
+	err := backoff.Retry(checkInterConnection, b)
+	if err != nil {
+		log.V(1).Infof("connect to %s fail after timeout: %s", publicip, err.Error())
+		t.pass = false
+		t.err = err
+	} else {
+		t.pass = true
+	}
+
 	return t
 }
 
