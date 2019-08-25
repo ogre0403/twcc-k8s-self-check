@@ -50,13 +50,14 @@ func main() {
 	showVersion()
 
 	kclient := k8sutil.GetK8SClientSet(kubeconfig)
+	crdClient := k8sutil.GetInwinClientSet(kubeconfig)
 
-	if kclient == nil {
+	if kclient == nil || crdClient == nil {
 		log.Fatal("Create kubernetes clientset fail")
 		return
 	}
 
-	checker := selfcheck.NewSelfChecker(cfg, kclient)
+	checker := selfcheck.NewSelfChecker(cfg, kclient, crdClient)
 
 	router := gin.Default()
 

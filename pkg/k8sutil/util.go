@@ -2,6 +2,7 @@ package k8sutil
 
 import (
 	log "github.com/golang/glog"
+	blendedset "github.com/inwinstack/blended/generated/clientset/versioned"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -34,6 +35,22 @@ func GetK8SClientSet(kubeconfig string) *kubernetes.Clientset {
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		log.Fatalf("create kubenetes client set fail: %s", err.Error())
+		return nil
+	}
+
+	return clientset
+}
+
+func GetInwinClientSet(kubeconfig string) *blendedset.Clientset {
+	config, err := getRestConfig(kubeconfig)
+	if err != nil {
+		log.Fatalf("create kubenetes config fail: %s", err.Error())
+		return nil
+	}
+
+	clientset, err := blendedset.NewForConfig(config)
+	if err != nil {
+		log.Fatalf("create inwin CRD kubenetes client set fail: %s", err.Error())
 		return nil
 	}
 

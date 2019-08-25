@@ -9,6 +9,7 @@ require (
 	github.com/google/uuid v1.1.1 // indirect
 	github.com/googleapis/gnostic v0.3.1 // indirect
 	github.com/imdario/mergo v0.3.7 // indirect
+	github.com/inwinstack/blended v0.7.0
 	github.com/json-iterator/go v1.1.7 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/onsi/ginkgo v1.8.0 // indirect
@@ -27,4 +28,10 @@ require (
 	k8s.io/klog v0.4.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20190709113604-33be087ad058 // indirect
 	k8s.io/utils v0.0.0-20190809000727-6c36bc71fc4a // indirect
+)
+
+replace (
+	k8s.io/api => k8s.io/api v0.0.0-20190620084959-7cf5895f2711
+	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20190612205821-1799e75a0719
+	k8s.io/client-go => k8s.io/client-go v0.0.0-20190620085101-78d2af792bab
 )
