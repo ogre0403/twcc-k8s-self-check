@@ -30,7 +30,7 @@ build-img:
 
 build-in-docker:
 	rm -rf bin/*
-	CGO_ENABLED=0 GOOS=linux go build -ldflags '-X "main.buildTime='"${buildTime}"'" -X "main.commitID='"${COMMIT}"'"' -a -installsuffix cgo -o bin/${PROJ_NAME} cmd/main.go
+	CGO_ENABLED=0 GOOS=linux go build  -mod vendor -ldflags '-X "main.buildTime='"${buildTime}"'" -X "main.commitID='"${COMMIT}"'"' -a -installsuffix cgo -o bin/${PROJ_NAME} cmd/main.go
 
 
 clean:
