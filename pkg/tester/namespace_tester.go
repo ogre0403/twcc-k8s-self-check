@@ -7,6 +7,7 @@ import (
 	"gitlab.com/twcc/twcc-k8s-self-check/pkg/config"
 	"gitlab.com/twcc/twcc-k8s-self-check/pkg/model"
 	corev1 "k8s.io/api/core/v1"
+	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	v1 "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -109,6 +110,24 @@ func (t *NamespaceTester) Close() {
 	err := t.nsClient.Delete(t.cfg.Namespace, &v12.DeleteOptions{})
 	if err != nil {
 		log.V(1).Infof("Delete namespace %s fail: %s", t.cfg.Namespace, err.Error())
+	}
+
+	b := backoff.NewExponentialBackOff()
+	b.MaxElapsedTime = 600 * time.Second
+
+	checkNamespaceExist := func() error {
+		_, err := t.nsClient.Get(t.cfg.Namespace, v12.GetOptions{})
+
+		if k8serr.IsNotFound(err) {
+			return nil
+		}
+
+		return errors.New("namespace is still in Terminating")
+	}
+
+	err = backoff.Retry(checkNamespaceExist, b)
+	if err != nil {
+		log.V(1).Infof("namespace %s is hang in Terminating state after timeout: %s", t.cfg.Namespace, err.Error())
 	}
 }
 
