@@ -25,7 +25,7 @@ var (
 func parserFlags() {
 
 	flag.Set("logtostderr", "true")
-	kubeconfig = os.ExpandEnv(*flag.String("kubeconfig", "$HOME/.kube/config", "kubernetes configuration"))
+	kubeconfig = os.ExpandEnv(*flag.String("kubeconfig", "", "kubernetes configuration"))
 	listenAddr = *flag.String("listen-addr", ":8080", "http server listen addr [addr:port]")
 	user = *flag.String("user", WOODPECKER, "user name for httop basic auth")
 	password = *flag.String("password", WOODPECKER, "user password for http basic auth")

@@ -3,3 +3,34 @@ kind: ServiceAccount
 metadata:
   namespace: twcc-util
   name: self-checker
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: self-check-role
+rules:
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["create", "get", "delete"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["create", "get"]
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["create", "get"]
+  - apiGroups: ["inwinstack.com"]
+    resources: ["nats"]
+    verbs: ["list", "get"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: SelfCheckRoleSABinding
+subjects:
+  - kind: ServiceAccount
+    name: self-checker
+    namespace: twcc-util
+roleRef:
+  kind: ClusterRole
+  name: self-check-role
+  apiGroup: rbac.authorization.k8s.io
