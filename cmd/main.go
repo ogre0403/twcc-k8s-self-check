@@ -25,17 +25,17 @@ var (
 func parserFlags() {
 
 	flag.Set("logtostderr", "true")
-	kubeconfig = os.ExpandEnv(*flag.String("kubeconfig", "", "kubernetes configuration"))
-	listenAddr = *flag.String("listen-addr", ":8080", "http server listen addr [addr:port]")
-	user = *flag.String("user", WOODPECKER, "user name for httop basic auth")
-	password = *flag.String("password", WOODPECKER, "user password for http basic auth")
-	cfg.Namespace = *flag.String("namespace", WOODPECKER, "namespace name used for test")
-	cfg.Pod = *flag.String("pod", WOODPECKER, "pod name used for test")
-	cfg.Svc = *flag.String("svc", WOODPECKER, "service name used for test")
-	cfg.Image = *flag.String("image", "nginx:latest", "container image used for test")
-	cfg.Port = *flag.Int("port", 80, "container application port used for test")
-	cfg.ExternalPort = *flag.Int("externalPort", 12345, "access port for external IP used for test")
-	cfg.Timout = *flag.Int("timeout", 30, "timeout for check test result")
+	flag.StringVar(&kubeconfig, "kubeconfig", "$HOME/.kube/config", "kubernetes configuration")
+	flag.StringVar(&listenAddr, "listen-addr", ":8080", "http server listen addr [addr:port]")
+	flag.StringVar(&user, "user", WOODPECKER, "user name for httop basic auth")
+	flag.StringVar(&password, "password", WOODPECKER, "user password for http basic auth")
+	flag.StringVar(&cfg.Namespace, "namespace", WOODPECKER, "namespace name used for test")
+	flag.StringVar(&cfg.Pod, "pod", WOODPECKER, "pod name used for test")
+	flag.StringVar(&cfg.Svc, "svc", WOODPECKER, "service name used for test")
+	flag.StringVar(&cfg.Image, "image", "nginx:latest", "container image used for test")
+	flag.IntVar(&cfg.Port, "port", 80, "container application port used for test")
+	flag.IntVar(&cfg.ExternalPort, "externalPort", 12345, "access port for external IP used for test")
+	flag.IntVar(&cfg.Timout, "timeout", 30, "timeout for check test result")
 	flag.Parse()
 }
 
@@ -49,8 +49,8 @@ func main() {
 	parserFlags()
 	showVersion()
 
-	kclient := k8sutil.GetK8SClientSet(kubeconfig)
-	crdClient := k8sutil.GetInwinClientSet(kubeconfig)
+	kclient := k8sutil.GetK8SClientSet(os.ExpandEnv(kubeconfig))
+	crdClient := k8sutil.GetInwinClientSet(os.ExpandEnv(kubeconfig))
 
 	if kclient == nil || crdClient == nil {
 		log.Fatal("Create kubernetes clientset fail")
