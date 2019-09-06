@@ -6,6 +6,7 @@ USER = $(shell whoami)
 buildTime = $(shell date +%Y-%m-%dT%H:%M:%S%z)
 PROJ_NAME = twcc-self-checker
 DOCKER_REPO = ogre0403
+RELEASE_TAG = v0.1
 
 ifeq ($(RET),0)
     TAG = $(shell git describe --contains $(COMMIT_HASH))
@@ -26,6 +27,7 @@ run-in-docker:
 
 build-img:
 	docker build -t ${DOCKER_REPO}/${PROJ_NAME}:$(TAG) .
+	docker tag ${DOCKER_REPO}/${PROJ_NAME}:$(TAG) ${DOCKER_REPO}/${PROJ_NAME}:$(RELEASE_TAG)
 
 
 build-in-docker:

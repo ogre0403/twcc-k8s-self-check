@@ -7,7 +7,7 @@ const (
 
 type Tester interface {
 	// Run Test case
-	Run() Tester
+	Run(req interface{}) Tester
 
 	// Check Test result
 	Check() Tester

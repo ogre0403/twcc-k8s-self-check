@@ -42,7 +42,7 @@ func NewSvcTester(cfg *config.Config, kclient *kubernetes.Clientset, crdClient *
 	}
 }
 
-func (t *SvcTester) Run() Tester {
+func (t *SvcTester) Run(req interface{}) Tester {
 
 	selector := map[string]string{
 		"app": t.cfg.Pod,

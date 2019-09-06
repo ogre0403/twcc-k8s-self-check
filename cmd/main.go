@@ -65,7 +65,9 @@ func main() {
 		user: password,
 	}))
 
-	authorized.GET("/lifeCycleCheck", checker.Check)
+	authorized.GET("/lifeCycleCheck", checker.BasicCheck)
+	authorized.POST("/shmCheck", checker.ShmCheck)
+	authorized.POST("/gpuCheck", checker.GpuCheck)
 
 	err := router.Run(listenAddr)
 	if err != nil {

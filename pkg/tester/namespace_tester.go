@@ -35,7 +35,7 @@ func NewNamespaceTester(cfg *config.Config, kclient *kubernetes.Clientset, ctx m
 	}
 }
 
-func (t *NamespaceTester) Run() Tester {
+func (t *NamespaceTester) Run(req interface{}) Tester {
 
 	ns := corev1.Namespace{
 		ObjectMeta: v12.ObjectMeta{

@@ -34,7 +34,7 @@ func NewPodTester(cfg *config.Config, kclient *kubernetes.Clientset, ctx map[str
 	}
 }
 
-func (t *PodTester) Run() Tester {
+func (t *PodTester) Run(req interface{}) Tester {
 
 	lbl := map[string]string{
 		"app": t.cfg.Pod,

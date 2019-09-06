@@ -25,7 +25,7 @@ func NewInterConnTester(cfg *config.Config, ctx map[string]string) *InterConnTes
 	}
 }
 
-func (t *InterConnTester) Run() Tester {
+func (t *InterConnTester) Run(req interface{}) Tester {
 	t.pass = true
 	return t
 }
