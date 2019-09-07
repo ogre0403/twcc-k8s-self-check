@@ -6,18 +6,27 @@ import (
 	"github.com/cenkalti/backoff"
 	log "github.com/golang/glog"
 	"gitlab.com/twcc/twcc-k8s-self-check/pkg/config"
+	"gitlab.com/twcc/twcc-k8s-self-check/pkg/k8sutil"
 	"gitlab.com/twcc/twcc-k8s-self-check/pkg/model"
 	corev1 "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
+	"strconv"
+	"strings"
 	"time"
 )
 
 type ShmPodTester struct {
 	PodTester
 }
+
+const (
+	SHMLIMIT       = "shmlimit"
+	KUBECONFIGPATH = "kubeconfigpath"
+)
 
 func NewShmPodTester(cfg *config.Config, kclient *kubernetes.Clientset, ctx map[string]string) *ShmPodTester {
 	podClient := kclient.CoreV1().Pods(v12.NamespaceDefault)
@@ -39,6 +48,8 @@ func (t *ShmPodTester) Run(req interface{}) Tester {
 	shm := request.ShmLimit
 
 	quantity, err := resource.ParseQuantity(shm)
+
+	t.ctx[SHMLIMIT] = shm
 
 	if err != nil {
 		log.V(1).Infof("Parse quantity %s fail: %s", shm, err.Error())
@@ -97,10 +108,58 @@ func (t *ShmPodTester) Check() Tester {
 	if t.pass == false {
 		return t
 	}
-	// todo: execute shell cmd to get shm size
 
-	t.pass = false
-	t.err = errors.New("Check not implemented")
+	pod, err := t.podClient.Get(t.cfg.Pod, v12.GetOptions{})
+
+	if err != nil {
+		t.pass = false
+		t.err = err
+		return t
+	}
+
+	// watch for pod is ready
+	watcher, err := t.podClient.Watch(
+		v12.SingleObject(pod.ObjectMeta),
+	)
+
+	if err != nil {
+		t.pass = false
+		t.err = err
+		return t
+	}
+
+	for event := range watcher.ResultChan() {
+		switch event.Type {
+		case watch.Modified:
+			pod = event.Object.(*corev1.Pod)
+
+			// If the Pod contains a status condition Ready == True, stop
+			// watching.
+			for _, cond := range pod.Status.Conditions {
+				if cond.Type == corev1.PodReady &&
+					cond.Status == corev1.ConditionTrue {
+					watcher.Stop()
+				}
+			}
+		default:
+			panic("unexpected event type " + event.Type)
+		}
+	}
+
+	stdout, _, err := k8sutil.ExecToPodThroughAPI(t.ctx[KUBECONFIGPATH], "df -B 1 /dev/shm", t.cfg.Pod, t.cfg.Pod, v12.NamespaceDefault, nil)
+	if err != nil {
+		t.pass = false
+		t.err = errors.New(fmt.Sprintf("Run Shell command inside pod %s fail: %s", t.cfg.Pod, err.Error()))
+		return t
+	}
+
+	if !checkPodShmValue(stdout, t.ctx[SHMLIMIT]) {
+		t.pass = false
+		t.err = errors.New("SHM limit is not enforce in Pod")
+		return t
+	}
+
+	t.pass = true
 	return t
 }
 
@@ -148,4 +207,11 @@ func (t *ShmPodTester) Close() {
 
 func (t *ShmPodTester) String() string {
 	return "ShmPodTester"
+}
+
+func checkPodShmValue(df_stdout, shm string) bool {
+	q, _ := resource.ParseQuantity(shm)
+	aa := strings.Split(df_stdout, "\n")
+	bb := strings.Fields(aa[1])
+	return strconv.Itoa(int(q.Value())) == bb[1]
 }

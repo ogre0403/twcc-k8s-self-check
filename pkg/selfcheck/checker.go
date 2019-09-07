@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	log "github.com/golang/glog"
-	blendedset "github.com/inwinstack/blended/generated/clientset/versioned"
 	"gitlab.com/twcc/twcc-k8s-self-check/pkg/config"
+	"gitlab.com/twcc/twcc-k8s-self-check/pkg/k8sutil"
 	"gitlab.com/twcc/twcc-k8s-self-check/pkg/model"
 	"gitlab.com/twcc/twcc-k8s-self-check/pkg/tester"
-	"k8s.io/client-go/kubernetes"
 	"net/http"
 	"sync/atomic"
 )
@@ -25,12 +24,22 @@ type SelfChecker struct {
 }
 
 const (
-	BasicTestCase = "BasicTest"
-	ShmTestCase   = "ShmTest"
-	GpuTestCase   = "GpuTest"
+	BasicTestCase  = "BasicTest"
+	ShmTestCase    = "ShmTest"
+	GpuTestCase    = "GpuTest"
+	KUBECONFIGPATH = "kubeconfigpath"
 )
 
-func NewSelfChecker(cfg *config.Config, kclient *kubernetes.Clientset, crdClient *blendedset.Clientset) *SelfChecker {
+//func NewSelfChecker(cfg *config.Config, kclient *kubernetes.Clientset, crdClient *blendedset.Clientset) *SelfChecker {
+func NewSelfChecker(cfg *config.Config, kubeconfig string) *SelfChecker {
+
+	kclient := k8sutil.GetK8SClientSet(kubeconfig)
+	crdClient := k8sutil.GetInwinClientSet(kubeconfig)
+
+	if kclient == nil || crdClient == nil {
+		log.Fatal("Create kubernetes clientset fail")
+		return nil
+	}
 
 	ctx := make(map[string]string)
 
@@ -42,8 +51,10 @@ func NewSelfChecker(cfg *config.Config, kclient *kubernetes.Clientset, crdClient
 		tester.NewInterConnTester(cfg, ctx),
 	}
 
+	ctx2 := make(map[string]string)
+	ctx2[KUBECONFIGPATH] = kubeconfig
 	shmTestCase := []tester.Tester{
-		tester.NewShmPodTester(cfg, kclient, ctx),
+		tester.NewShmPodTester(cfg, kclient, ctx2),
 	}
 
 	testCase := map[string]TestCase{
