@@ -12,7 +12,6 @@ import (
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"strconv"
 	"strings"
@@ -47,6 +46,29 @@ func (t *ShmPodTester) Run(req interface{}) Tester {
 	request := req.(*model.Request)
 	shm := request.ShmLimit
 
+	// setup node selector affinity
+	var affinity *corev1.Affinity = nil
+	if request.Node != "" {
+		log.V(1).Infof("Node Selector is defined, select node %s", request.Node)
+		affinity = &corev1.Affinity{
+			NodeAffinity: &corev1.NodeAffinity{
+				RequiredDuringSchedulingIgnoredDuringExecution: &corev1.NodeSelector{
+					NodeSelectorTerms: []corev1.NodeSelectorTerm{
+						{
+							MatchExpressions: []corev1.NodeSelectorRequirement{
+								{
+									Key:      "kubernetes.io/hostname",
+									Operator: corev1.NodeSelectorOpIn,
+									Values:   []string{request.Node},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+	}
+
 	quantity, err := resource.ParseQuantity(shm)
 
 	t.ctx[SHMLIMIT] = shm
@@ -64,6 +86,7 @@ func (t *ShmPodTester) Run(req interface{}) Tester {
 			Name:      t.cfg.Pod,
 		},
 		Spec: corev1.PodSpec{
+			Affinity: affinity,
 			Containers: []corev1.Container{
 				{
 					Name:    t.cfg.Pod,
@@ -109,41 +132,27 @@ func (t *ShmPodTester) Check() Tester {
 		return t
 	}
 
-	pod, err := t.podClient.Get(t.cfg.Pod, v12.GetOptions{})
+	b := backoff.NewExponentialBackOff()
+	b.MaxElapsedTime = time.Duration(t.cfg.Timout) * time.Second
 
-	if err != nil {
-		t.pass = false
-		t.err = err
-		return t
-	}
-
-	// watch for pod is ready
-	watcher, err := t.podClient.Watch(
-		v12.SingleObject(pod.ObjectMeta),
-	)
-
-	if err != nil {
-		t.pass = false
-		t.err = err
-		return t
-	}
-
-	for event := range watcher.ResultChan() {
-		switch event.Type {
-		case watch.Modified:
-			pod = event.Object.(*corev1.Pod)
-
-			// If the Pod contains a status condition Ready == True, stop
-			// watching.
-			for _, cond := range pod.Status.Conditions {
-				if cond.Type == corev1.PodReady &&
-					cond.Status == corev1.ConditionTrue {
-					watcher.Stop()
-				}
-			}
-		default:
-			panic("unexpected event type " + event.Type)
+	checkPodRunning := func() error {
+		pod, err := t.podClient.Get(t.cfg.Pod, v12.GetOptions{})
+		if err != nil {
+			return err
 		}
+
+		if pod.Status.Phase != corev1.PodRunning {
+			return errors.New("Pod State is not Running")
+		}
+		return nil
+	}
+
+	err := backoff.Retry(checkPodRunning, b)
+	if err != nil {
+		log.V(1).Infof("pod %s is not running after timeout: %s", t.cfg.Pod, err.Error())
+		t.pass = false
+		t.err = err
+		return t
 	}
 
 	stdout, _, err := k8sutil.ExecToPodThroughAPI(t.ctx[KUBECONFIGPATH], "df -B 1 /dev/shm", t.cfg.Pod, t.cfg.Pod, v12.NamespaceDefault, nil)
