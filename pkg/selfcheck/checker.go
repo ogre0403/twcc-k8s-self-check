@@ -30,7 +30,6 @@ const (
 	KUBECONFIGPATH = "kubeconfigpath"
 )
 
-//func NewSelfChecker(cfg *config.Config, kclient *kubernetes.Clientset, crdClient *blendedset.Clientset) *SelfChecker {
 func NewSelfChecker(cfg *config.Config, kubeconfig string) *SelfChecker {
 
 	kclient := k8sutil.GetK8SClientSet(kubeconfig)
@@ -57,6 +56,12 @@ func NewSelfChecker(cfg *config.Config, kubeconfig string) *SelfChecker {
 		tester.NewShmPodTester(cfg, kclient, ctx2),
 	}
 
+	ctx3 := make(map[string]string)
+	ctx3[KUBECONFIGPATH] = kubeconfig
+	gpuTestCase := []tester.Tester{
+		tester.NewGPUPodTester(cfg, kclient, ctx3),
+	}
+
 	testCase := map[string]TestCase{
 		BasicTestCase: {
 			Name: BasicTestCase,
@@ -65,6 +70,10 @@ func NewSelfChecker(cfg *config.Config, kubeconfig string) *SelfChecker {
 		ShmTestCase: {
 			Name: ShmTestCase,
 			Step: shmTestCase,
+		},
+		GpuTestCase: {
+			Name: GpuTestCase,
+			Step: gpuTestCase,
 		},
 	}
 
@@ -132,6 +141,32 @@ func (s *SelfChecker) ShmCheck(c *gin.Context) {
 }
 
 func (s *SelfChecker) GpuCheck(c *gin.Context) {
+	var req model.Request
+	err := c.BindJSON(&req)
+	if err != nil {
+		log.Errorf("Failed to parse spec request request: %s", err.Error())
+		return
+	}
+
+	if !atomic.CompareAndSwapUint32(&s.locker, 0, 1) {
+		c.JSON(http.StatusTooManyRequests, model.CheckResult{
+			ErrorMsg: fmt.Sprintf("Another Check %s is running", s.testingCase),
+		})
+		return
+	}
+	s.testingCase = GpuTestCase
+	// deferred calls are executed in last-in-first-out
+	defer atomic.StoreUint32(&s.locker, 0)
+	defer s.shutdown()
+
+	result := model.CheckResult{}
+	for _, t := range s.testCases[GpuTestCase].Step {
+		if !t.Run(&req).Check().Report(&result).Next() {
+			c.JSON(http.StatusOK, result)
+			return
+		}
+	}
+	c.JSON(http.StatusOK, result)
 }
 
 func (s *SelfChecker) shutdown() {
