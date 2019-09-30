@@ -35,6 +35,7 @@ func NewNamespaceTester(cfg *config.Config, kclient *kubernetes.Clientset, ctx m
 	}
 }
 
+// create namespace
 func (t *NamespaceTester) Run() Tester {
 
 	ns := corev1.Namespace{
@@ -56,6 +57,7 @@ func (t *NamespaceTester) Run() Tester {
 	return t
 }
 
+// wait timeout seconds for namespace is created
 func (t *NamespaceTester) Check() Tester {
 
 	if t.pass == false {
@@ -90,6 +92,7 @@ func (t *NamespaceTester) Check() Tester {
 	return t
 }
 
+// report namespace creation status
 func (t *NamespaceTester) Report(report interface{}) Tester {
 
 	if !t.pass {

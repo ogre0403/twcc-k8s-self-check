@@ -20,11 +20,17 @@ type SelfChecker struct {
 func NewSelfChecker(cfg *config.Config, kclient *kubernetes.Clientset, crdClient *blendedset.Clientset) *SelfChecker {
 
 	ctx := make(map[string]string)
+	// test case has five sequential steps to check
 	cases := []tester.Tester{
+		// check if namespace is created corrected
 		tester.NewNamespaceTester(cfg, kclient, ctx),
+		// check if pod is created corrected
 		tester.NewPodTester(cfg, kclient, ctx),
+		// check if service is created corrected
 		tester.NewSvcTester(cfg, kclient, crdClient, ctx),
+		// check
 		tester.NewIntraConnTester(cfg, ctx),
+		// check if connection available from public ip
 		tester.NewInterConnTester(cfg, ctx),
 	}
 
