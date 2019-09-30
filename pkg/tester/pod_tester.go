@@ -34,6 +34,7 @@ func NewPodTester(cfg *config.Config, kclient *kubernetes.Clientset, ctx map[str
 	}
 }
 
+// create namespace
 func (t *PodTester) Run(req interface{}) Tester {
 
 	lbl := map[string]string{
@@ -75,6 +76,7 @@ func (t *PodTester) Run(req interface{}) Tester {
 	return t
 }
 
+// wait timeout seconds for pod is created
 func (t *PodTester) Check() Tester {
 	if t.pass == false {
 		return t
@@ -106,6 +108,7 @@ func (t *PodTester) Check() Tester {
 	return t
 }
 
+// report pod creation status
 func (t *PodTester) Report(report interface{}) Tester {
 
 	if !t.pass {

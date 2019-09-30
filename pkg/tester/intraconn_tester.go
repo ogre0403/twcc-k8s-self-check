@@ -32,6 +32,7 @@ func (t *IntraConnTester) Run(req interface{}) Tester {
 	return t
 }
 
+//check if connection available from external ip
 func (t *IntraConnTester) Check() Tester {
 	if t.pass == false {
 		return t
@@ -67,6 +68,7 @@ func (t *IntraConnTester) Check() Tester {
 	return t
 }
 
+// report intra-connection status
 func (t *IntraConnTester) Report(report interface{}) Tester {
 
 	if !t.pass {

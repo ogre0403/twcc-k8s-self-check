@@ -42,11 +42,17 @@ func NewSelfChecker(cfg *config.Config, kubeconfig string) *SelfChecker {
 
 	ctx := make(map[string]string)
 
+	// test case has five sequential steps to check
 	basicTestCase := []tester.Tester{
+		// check if namespace is created corrected
 		tester.NewNamespaceTester(cfg, kclient, ctx),
+		// check if pod is created corrected
 		tester.NewPodTester(cfg, kclient, ctx),
+		// check if service is created corrected
 		tester.NewSvcTester(cfg, kclient, crdClient, ctx),
+		// check
 		tester.NewIntraConnTester(cfg, ctx),
+		// check if connection available from public ip
 		tester.NewInterConnTester(cfg, ctx),
 	}
 

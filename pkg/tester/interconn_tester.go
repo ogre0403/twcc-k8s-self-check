@@ -30,6 +30,7 @@ func (t *InterConnTester) Run(req interface{}) Tester {
 	return t
 }
 
+//check if connection available from public ip
 func (t *InterConnTester) Check() Tester {
 	if t.pass == false {
 		return t
@@ -61,6 +62,7 @@ func (t *InterConnTester) Check() Tester {
 	return t
 }
 
+// report inter-connection status
 func (t *InterConnTester) Report(report interface{}) Tester {
 
 	if !t.pass {

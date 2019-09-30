@@ -42,6 +42,7 @@ func NewSvcTester(cfg *config.Config, kclient *kubernetes.Clientset, crdClient *
 	}
 }
 
+// create service
 func (t *SvcTester) Run(req interface{}) Tester {
 
 	selector := map[string]string{
@@ -81,6 +82,7 @@ func (t *SvcTester) Run(req interface{}) Tester {
 	return t
 }
 
+// wait timeout seconds for service is created
 func (t *SvcTester) Check() Tester {
 	if t.pass == false {
 		return t
@@ -117,6 +119,7 @@ func (t *SvcTester) Check() Tester {
 	return t
 }
 
+// report service creation status
 func (t *SvcTester) Report(report interface{}) Tester {
 
 	if !t.pass {
