@@ -8,3 +8,13 @@ type CheckResult struct {
 	InternetConnection string `json:"InterConnection,omitempty"`
 	ErrorMsg           string `json:"ErrorMessage,omitempty"`
 }
+
+type NodeGPUUsage struct {
+	Node  string `json:"Node"`
+	Count int64  `json:"Count"`
+}
+
+type NodeGPUUsageResult struct {
+	Status   []NodeGPUUsage `json:"Result,omitempty"`
+	ErrorMsg string         `json:"ErrorMessage,omitempty"`
+}

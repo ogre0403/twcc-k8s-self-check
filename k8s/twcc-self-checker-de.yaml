@@ -18,7 +18,7 @@ spec:
       serviceAccountName: self-checker
       containers:
         - name: self-checker
-          image: ogre0403/twcc-self-checker:v0.1
+          image: ogre0403/twcc-self-checker:v0.2
           imagePullPolicy: Always
           command:
             - /twcc-self-checker

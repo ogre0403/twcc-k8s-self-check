@@ -27,6 +27,7 @@ const (
 	BasicTestCase  = "BasicTest"
 	ShmTestCase    = "ShmTest"
 	GpuTestCase    = "GpuTest"
+	NodeGPUUsage   = "NodeGpuUsage"
 	KUBECONFIGPATH = "kubeconfigpath"
 )
 
@@ -68,6 +69,11 @@ func NewSelfChecker(cfg *config.Config, kubeconfig string) *SelfChecker {
 		tester.NewGPUPodTester(cfg, kclient, ctx3),
 	}
 
+	ctx4 := make(map[string]int64)
+	nodeGPUUsage := []tester.Tester{
+		tester.NewNodeGPUUsageTester(cfg, kclient, ctx4),
+	}
+
 	testCase := map[string]TestCase{
 		BasicTestCase: {
 			Name: BasicTestCase,
@@ -80,6 +86,10 @@ func NewSelfChecker(cfg *config.Config, kubeconfig string) *SelfChecker {
 		GpuTestCase: {
 			Name: GpuTestCase,
 			Step: gpuTestCase,
+		},
+		NodeGPUUsage: {
+			Name: NodeGPUUsage,
+			Step: nodeGPUUsage,
 		},
 	}
 
@@ -168,6 +178,29 @@ func (s *SelfChecker) GpuCheck(c *gin.Context) {
 	result := model.CheckResult{}
 	for _, t := range s.testCases[GpuTestCase].Step {
 		if !t.Run(&req).Check().Report(&result).Next() {
+			c.JSON(http.StatusOK, result)
+			return
+		}
+	}
+	c.JSON(http.StatusOK, result)
+}
+
+func (s *SelfChecker) NodeGpuStatus(c *gin.Context) {
+	if !atomic.CompareAndSwapUint32(&s.locker, 0, 1) {
+		c.JSON(http.StatusTooManyRequests, model.CheckResult{
+			ErrorMsg: fmt.Sprintf("Another Check %s is running", s.testingCase),
+		})
+		return
+	}
+
+	s.testingCase = NodeGPUUsage
+	// deferred calls are executed in last-in-first-out
+	defer atomic.StoreUint32(&s.locker, 0)
+	defer s.shutdown()
+
+	result := model.NodeGPUUsageResult{}
+	for _, t := range s.testCases[NodeGPUUsage].Step {
+		if !t.Run(nil).Check().Report(&result).Next() {
 			c.JSON(http.StatusOK, result)
 			return
 		}

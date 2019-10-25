@@ -64,6 +64,7 @@ func main() {
 	authorized.GET("/lifeCycleCheck", checker.BasicCheck)
 	authorized.POST("/shmCheck", checker.ShmCheck)
 	authorized.POST("/gpuCheck", checker.GpuCheck)
+	authorized.GET("/nodeGpuStatus", checker.NodeGpuStatus)
 
 	err := router.Run(listenAddr)
 	if err != nil {
