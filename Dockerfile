@@ -1,4 +1,4 @@
-FROM golang:1.11.4 as build
+FROM golang:1.12 as build
 
 RUN mkdir /twcc-self-checker
 WORKDIR /twcc-self-checker
@@ -13,6 +13,6 @@ COPY go.sum .
 COPY . .
 RUN make build-in-docker
 
-FROM alpine:latest
+FROM alpine:3.7
 COPY --from=build /twcc-self-checker/bin/twcc-self-checker /
 CMD ["/twcc-self-checker","-v","1"]

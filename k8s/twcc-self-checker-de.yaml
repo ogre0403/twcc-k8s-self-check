@@ -18,12 +18,13 @@ spec:
       serviceAccountName: self-checker
       containers:
         - name: self-checker
-          image: ogre0403/twcc-self-checker:v0.2
+          image: ogre0403/twcc-self-checker:v0.2.1
           imagePullPolicy: Always
           command:
             - /twcc-self-checker
             - --kubeconfig=
             - --v=1
+            - --timeout=60
           ports:
             - containerPort: 8080
               name: http

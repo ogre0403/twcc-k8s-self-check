@@ -6,7 +6,7 @@ USER = $(shell whoami)
 buildTime = $(shell date +%Y-%m-%dT%H:%M:%S%z)
 PROJ_NAME = twcc-self-checker
 DOCKER_REPO = ogre0403
-RELEASE_TAG = v0.2
+RELEASE_TAG = v0.2.1
 
 ifeq ($(RET),0)
     TAG = $(shell git describe --contains $(COMMIT_HASH))

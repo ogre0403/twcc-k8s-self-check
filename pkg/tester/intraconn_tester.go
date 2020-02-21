@@ -7,7 +7,7 @@ import (
 	log "github.com/golang/glog"
 	"gitlab.com/twcc/twcc-k8s-self-check/pkg/config"
 	"gitlab.com/twcc/twcc-k8s-self-check/pkg/model"
-	"net"
+	"net/http"
 	"time"
 )
 
@@ -48,17 +48,17 @@ func (t *IntraConnTester) Check() Tester {
 	}
 
 	checkIntraConnection := func() error {
-		conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", exteranlIP, t.cfg.ExternalPort))
+		resp, err := http.Get(fmt.Sprintf("http://%s:%d", exteranlIP, t.cfg.ExternalPort))
 		if err != nil {
 			return err
 		}
-		defer conn.Close()
+		defer resp.Body.Close()
 		return nil
 	}
 
 	err := backoff.Retry(checkIntraConnection, b)
 	if err != nil {
-		log.V(1).Infof("connect to %s fail after timeout: %s", exteranlIP, err.Error())
+		log.V(1).Infof("connect to http://%s:%d fail after timeout: %s", exteranlIP, t.cfg.ExternalPort, err.Error())
 		t.pass = false
 		t.err = err
 	} else {
